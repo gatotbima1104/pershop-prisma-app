@@ -18,7 +18,8 @@ export class AuthService {
                     // id: uuidv4(),
                     name: dto.name,
                     username: dto.username,
-                    password: hashedPassword
+                    password: hashedPassword,
+                    
                 }
             })
     

@@ -5,10 +5,10 @@ import {
     UnauthorizedException,
   } from '@nestjs/common';
   import { JwtService } from '@nestjs/jwt';
-  import { jwtConstants } from './jwt.constant';
+  import { jwtConstants } from '../jwt.constant';
   import { Request } from 'express';
   import { Reflector } from '@nestjs/core'
-  import { IS_PUBLIC_KEY } from './skip.auth';
+  import { IS_PUBLIC_KEY } from '../skip.auth';
   
   @Injectable()
   export class AuthGuard implements CanActivate {

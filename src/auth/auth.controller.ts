@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { CreateUserDto, LoginUserDto } from './dto';
 // import { AuthGuard } from './auth.guard';
 import { Public } from './skip.auth';
+import { Roles } from './roles.decorator';
+import { Role } from './enum/role.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +23,7 @@ export class AuthController {
     }
 
     // @UseGuards(AuthGuard)
+    @Roles(Role.Admin)
     @Get('users')
     getUsers(){
         return this.authService.users()

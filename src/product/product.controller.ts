@@ -9,7 +9,6 @@ export class ProductController {
     constructor(private productService: ProductService){}
 
     @Get()
-    @Roles(Role.ADMIN)
     getAllProducts(){
         return this.productService.getAllProducts()
     }
@@ -20,16 +19,19 @@ export class ProductController {
     }
 
     @Post()
+    @Roles(Role.ADMIN)
     insertProduct(@Body() dto: ProductDto){
         return this.productService.insertProduct(dto)
     }
 
     @Patch(':id')
+    @Roles(Role.ADMIN)
     updateProduct(@Param('id') id: string, @Body() dto: ProductDto){
         return this.productService.updateProduct((id), dto)
     }
 
     @Delete(':id')
+    @Roles(Role.ADMIN)
     removeProduct(@Param('id') id: string){
         return this.productService.removeProductById((id))
     }

@@ -1,12 +1,15 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { ProductDto } from './dto';
+import { Role } from '@prisma/client';
+import { Roles } from 'src/auth/decorator/roles.decorator';
 
 @Controller('product')
 export class ProductController {
     constructor(private productService: ProductService){}
 
     @Get()
+    @Roles(Role.ADMIN)
     getAllProducts(){
         return this.productService.getAllProducts()
     }

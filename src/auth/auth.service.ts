@@ -18,8 +18,7 @@ export class AuthService {
                     // id: uuidv4(),
                     name: dto.name,
                     username: dto.username,
-                    password: hashedPassword,
-                    
+                    password: hashedPassword
                 }
             })
     
@@ -68,16 +67,12 @@ export class AuthService {
 
         const payload = {
             sub: user.id,
-            username: user.username
+            username: user.username,
+            role: user.role
         }
 
         return {
             access_token: await this.jwtService.signAsync(payload)
         }
-
-        // return ({ 
-        //     user,
-        //     message: 'Login successfully'
-        // })
     }
 }

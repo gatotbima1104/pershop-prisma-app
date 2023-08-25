@@ -1,9 +1,9 @@
-import { ForbiddenException, Injectable, NotFoundException} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto, LoginUserDto } from './dto';
-import * as argon from 'argon2'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { JwtService } from '@nestjs/jwt';
+import { jwtPayload } from './jwt/jwt.interface';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -11,42 +11,64 @@ export class AuthService {
 
     async register(dto: CreateUserDto){
         try {
-            const hashedPassword = await argon.hash(dto.password)
-    
-            const newUser = await this.prisma.user.create({
-                data: {
-                    // id: uuidv4(),
-                    name: dto.name,
-                    username: dto.username,
-                    password: hashedPassword
+            // cek duplicate username
+            const duplicateUser = await this.prisma.user.findUnique({
+                where: { 
+                    username: dto.username
                 }
             })
-    
-            delete newUser.password
+
+            if(duplicateUser){
+                throw new HttpException({
+                    statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+                    message: 'username has been taken',
+                },
+                HttpStatus.UNPROCESSABLE_ENTITY
+                )
+            }
+
+            const salt = await bcrypt.genSalt()
+
+            const hashedPw = await bcrypt.hash(
+                dto.password, salt
+            )
+
+            //create and hashed password
+            const newUser = await this.prisma.user.create({
+                data: {
+                    name: dto.name,
+                    username: dto.username,
+                    password: hashedPw
+                }
+            })
             
+            //make payload for header user
+            const payload: jwtPayload = {
+                id: newUser.id,
+                role: newUser.role
+            }
+
             return {
-                user: newUser,
-                message: 'User Registered'
+                message: 'you are registered successfully',
+                token: await this.jwtService.signAsync(payload)
             }
             
         } catch (error) {
-
-            if (error instanceof PrismaClientKnownRequestError) {
-                if (error.code === 'P2002') {
-                throw new ForbiddenException('Username has been taken');
+            throw new HttpException({
+                statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+                data: {
+                    message: error.message
                 }
-            }            
-            throw error
-            
+            },
+            HttpStatus.UNPROCESSABLE_ENTITY
+            )
         }
 
     }
-
-    async users(){
-        return await this.prisma.user.findMany()
-    }
-
+    
     async login(dto: LoginUserDto){
+        
+        // check user in db
         const user = await this.prisma.user.findUnique({
             where:{
                 username: dto.username
@@ -54,25 +76,41 @@ export class AuthService {
         })
 
         if(!user){
-            throw new NotFoundException('Username is Incorrect')
+            throw new HttpException({
+                statusCode: HttpStatus.NOT_FOUND,
+                message: "User not found"
+            },
+            HttpStatus.NOT_FOUND
+            )
         }
 
-        const isMatch = await argon.verify(user.password, dto.password)
+        // check password and username
+        const isMatch = this.validatePassword(user.password, dto.password)
 
-        if(!isMatch){
-            throw new NotFoundException('Password is Incorrect')
-        }
+        if(isMatch){
+            delete user.password
 
-        delete user.password
+            const payload: jwtPayload = {
+                id: user.id,
+                role: user.role
+            }
 
-        const payload = {
-            sub: user.id,
-            username: user.username,
-            role: user.role
-        }
+            return {
+                user,
+                token: await this.jwtService.signAsync(payload)
+            }
 
-        return {
-            access_token: await this.jwtService.signAsync(payload)
-        }
+        } throw new HttpException(
+            'Username or Password is Incorrect',
+            HttpStatus.UNAUTHORIZED
+        )
+    }
+
+    async validatePassword(hashedPw: string, passsword: string){
+        return await bcrypt.compare(hashedPw, passsword)
+    }
+
+    async users(){
+        return await this.prisma.user.findMany()
     }
 }

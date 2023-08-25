@@ -14,8 +14,6 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
 
-    console.log('role is not assignable');
-
     if (!requiredRoles) {
       return true;
     }

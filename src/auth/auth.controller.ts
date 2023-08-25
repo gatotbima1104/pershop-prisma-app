@@ -29,7 +29,6 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
-  // @UseGuards(AuthGuard)
   @Roles(Role.ADMIN)
   @Get('users')
   getUsers() {

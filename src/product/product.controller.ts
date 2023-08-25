@@ -16,7 +16,7 @@ export class ProductController {
 
     @Get(':id')
     getProductById(@Param('id') id: string){
-        return this.productService.getProduct(parseInt(id))
+        return this.productService.getProduct((id))
     }
 
     @Post()
@@ -26,12 +26,12 @@ export class ProductController {
 
     @Patch(':id')
     updateProduct(@Param('id') id: string, @Body() dto: ProductDto){
-        return this.productService.updateProduct(parseInt(id), dto)
+        return this.productService.updateProduct((id), dto)
     }
 
     @Delete(':id')
     removeProduct(@Param('id') id: string){
-        return this.productService.removeProductById(parseInt(id))
+        return this.productService.removeProductById((id))
     }
 
 }
